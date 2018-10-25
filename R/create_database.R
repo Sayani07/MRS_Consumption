@@ -25,7 +25,7 @@ df <- read_csv(data_file,
   mutate(
     time.utc = as.numeric(strftime(time.utc, '%Y%m%d%H%M')),
     time.local = as.numeric(strftime(time.local, '%Y%m%d%H%M')),
-    source = factor(source)
+    source = factor(source)                                                  
   ) 
 
 date.range <- range(df$time.utc)
@@ -45,7 +45,13 @@ reference.times <- data_frame(
 
 df.uniform <- expand.grid(time=reference.times$timeid,
                         source=unique(df$source)) %>%
-  left_join(df, by=c('time'='time.utc', 'source'))
+  left_join(df, by=c('time'='time.utc', 'source')) %>%
+  rename(time.utc = time) %>% 
+  mutate(
+    timeid = as.numeric(strptime(time.utc, '%Y%m%d%H%M')),
+    #dateid = as.numeric(strftime(time.utc, '%Y%m%d',tz='UTC')),
+    #dayname = strftime(time.utc, '%A')
+  )
 
 con <- dbConnect(RSQLite::SQLite(), "DHResidence.db")
 copy_to(con, df.uniform, name='energy', overwrite=TRUE, temporary = FALSE)
